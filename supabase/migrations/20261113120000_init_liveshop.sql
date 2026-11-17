@@ -666,3 +666,25 @@ alter table disputes    enable row level security;
 -- Aucune politique permissive n'est créée ici, volontairement.
 -- Les lectures publiques (boutique, suivi client) passent par des routes
 -- serveur qui exposent un sous-ensemble choisi de colonnes.
+
+-- =====================================================================
+-- SECURITE : RESTRICTION DES ACCES DIRECTS
+-- Les fonctions SECURITY DEFINER et les vues doivent etre explicitement
+-- privees de droits pour les clients, en plus des protections RLS.
+-- ATTENTION : confirm_delivery n'est pas prete pour la production :
+-- une exception apres incrementation annule le compteur OTP. A corriger
+-- et tester avant toute ouverture d'acces ou livraison reelle.
+-- =====================================================================
+revoke all on function public.place_order(
+  uuid, text, text, text, text, text, text, text, jsonb
+) from public, anon, authenticated;
+
+revoke all on function public.confirm_delivery(
+  uuid, text, public.balance_method
+) from public, anon, authenticated;
+
+revoke all on table
+  public.vendor_reputation,
+  public.courier_cash_exposure,
+  public.live_session_stats
+from public, anon, authenticated;
